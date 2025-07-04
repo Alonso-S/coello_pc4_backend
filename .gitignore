@@ -1,0 +1,47 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+pnpm-lock.yaml
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor settings
+.vscode/
+.idea/
+*.swp
+
+# Build output
+dist/
+build/
+tmp/
+temp/
+
+# Coverage and testing
+coverage/
+.nyc_output/
+jest-results.json
+
+# Optional: ignore test snapshots
+__snapshots__/
+
+# Optional: ignore local development database
+*.sqlite
+*.sqlite3
+
+# Optional: ignore local uploads
+uploads/
