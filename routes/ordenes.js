@@ -72,27 +72,32 @@ router.post(
       const detallesConPrecios = [];
 
       for (const detalle of detalles) {
+        // Asegurar que CodMedicamento es número
+        const codMedicamento = Number(detalle.CodMedicamento);
+        const cantidadRequerida = Number(detalle.cantidadRequerida);
         const medicamento = await prisma.medicamento.findUnique({
-          where: { id: detalle.CodMedicamento },
+          where: { id: codMedicamento },
         });
 
         if (!medicamento) {
           return res.status(400).json({
-            message: `Medication with ID ${detalle.CodMedicamento} not found`,
+            message: `Medication with ID ${codMedicamento} not found`,
           });
         }
 
-        if (medicamento.stock < detalle.cantidadRequerida) {
+        if (medicamento.stock < cantidadRequerida) {
           return res.status(400).json({
             message: `Insufficient stock for ${medicamento.descripcionMed}`,
           });
         }
 
-        const subtotal = medicamento.precioVentaUni * detalle.cantidadRequerida;
+        const subtotal = medicamento.precioVentaUni * cantidadRequerida;
         total += subtotal;
 
         detallesConPrecios.push({
           ...detalle,
+          CodMedicamento: codMedicamento,
+          cantidadRequerida,
           descripcionMed: medicamento.descripcionMed,
           precioUnitario: medicamento.precioVentaUni,
           subtotal,
@@ -104,7 +109,7 @@ router.post(
         // Create order
         const nuevaOrden = await tx.ordenVenta.create({
           data: {
-            fechaEmision: new Date(),
+            fechaEmision: new Date().toISOString(), // ISO-8601
             Motivo,
             Situacion: "Pendiente",
             total,
@@ -117,20 +122,20 @@ router.post(
           await tx.detalleOrdenVta.create({
             data: {
               NroOrdenVta: nuevaOrden.id,
-              CodMedicamento: detalle.CodMedicamento,
+              CodMedicamento: Number(detalle.CodMedicamento),
               descripcionMed: detalle.descripcionMed,
-              cantidadRequerida: detalle.cantidadRequerida,
-              precioUnitario: detalle.precioUnitario,
-              subtotal: detalle.subtotal,
+              cantidadRequerida: Number(detalle.cantidadRequerida),
+              precioUnitario: Number(detalle.precioUnitario),
+              subtotal: Number(detalle.subtotal),
             },
           });
 
           // Update medication stock
           await tx.medicamento.update({
-            where: { id: detalle.CodMedicamento },
+            where: { id: Number(detalle.CodMedicamento) },
             data: {
               stock: {
-                decrement: detalle.cantidadRequerida,
+                decrement: Number(detalle.cantidadRequerida),
               },
             },
           });
