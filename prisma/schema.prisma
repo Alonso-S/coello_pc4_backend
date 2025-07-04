@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  nombre    String
+  apellido  String
+  rol       String   @default("user") // admin, user
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  ordenesVenta OrdenVenta[]
+}
+
+model Medicamento {
+  id                Int       @id @default(autoincrement())
+  descripcionMed    String?
+  fechaFabricacion  DateTime?
+  fechaVencimiento  DateTime?
+  Presentacion      String?
+  stock             Int?
+  precioVentaUni    Decimal?  @db.Decimal(10, 2)
+  precioVentaPres   Decimal?  @db.Decimal(10, 2)
+  CodTipoMed        Int?
+  Marca             String?
+  CodEspec          Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  detallesVenta DetalleOrdenVta[]
+  tipoMedic     TipoMedic?        @relation(fields: [CodTipoMed], references: [id])
+  especialidad  Especialidad?     @relation(fields: [CodEspec], references: [id])
+}
+
+model DetalleOrdenVta {
+  id                 Int      @id @default(autoincrement())
+  NroOrdenVta        Int?
+  CodMedicamento     Int?
+  descripcionMed     String?
+  cantidadRequerida  Int?
+  precioUnitario     Decimal? @db.Decimal(10, 2)
+  subtotal           Decimal? @db.Decimal(10, 2)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  ordenVenta  OrdenVenta?  @relation(fields: [NroOrdenVta], references: [id])
+  medicamento Medicamento? @relation(fields: [CodMedicamento], references: [id])
+}
+
+model OrdenVenta {
+  id           Int      @id @default(autoincrement())
+  fechaEmision DateTime?
+  Motivo       String?
+  Situacion    String?  @default("Pendiente") // Pendiente, Completada, Cancelada
+  total        Decimal? @db.Decimal(10, 2)
+  userId       Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  detalles DetalleOrdenVta[]
+  usuario  User?             @relation(fields: [userId], references: [id])
+}
+
+model TipoMedic {
+  id          Int      @id @default(autoincrement())
+  descripcion String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  medicamentos Medicamento[]
+}
+
+model Especialidad {
+  id             Int      @id @default(autoincrement())
+  descripcionEsp String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  medicamentos Medicamento[]
+}
